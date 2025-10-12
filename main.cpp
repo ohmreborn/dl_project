@@ -27,7 +27,8 @@ class Net : public torch::nn::Module {
 };
 
 int main() {
-	std::string filename = "./data/dataset/train/low_res/0.png";
+	std::string data_path = "/kaggle/input/image-super-resolution";
+	std::string filename = data_path + "/dataset/train/low_res/0.png";
 	std::cout << "Before cv::imread\n";
 	cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
 	std::cout << "After cv::imread\n";
@@ -35,9 +36,6 @@ int main() {
 		std::cerr << "Image not found!";
 		return 1;
 	}
-	long long kRows = img.rows;
-	long long kCols = img.cols;
-	long long channels = img.channels();
 	std::cout << "Before cvtColor\n";
 	cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
 	std::cout << "After cvtColor\n";
@@ -61,6 +59,9 @@ int main() {
 	img_tensor = img_tensor.permute({2, 0, 1}).toType(torch::kFloat).div_(255);
 	std::cout << "After permute\n";
 	std::cout << img_tensor << '\n';
+
+	Net model;
+	std::cout << model.forward(img_tensor);
 
 	return 0;
 }
