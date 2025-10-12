@@ -4,12 +4,22 @@
 
 #include <vector>
 
-CustomDataset::CustomDataset(const std::filesystem::path root_folder) {
-	read_image(root_folder / "low_res", low_res);
-	read_image(root_folder / "high_res", high_res);
+std::string join_path(const std::string& a, const std::string& b) {
+	if (a.back() == '/'){ 
+		return a + b;
+	}else{
+		return a + "/" + b;
+	}
 }
 
-void read_image(const std::filesystem::path image_folder, std::vector<torch::Tensor> &data){
+CustomDataset::CustomDataset(const std::string root_folder) {
+	std::string low_res_path = join_path(root_folder, "low_res");
+	std::string high_res_path = join_path(root_folder, "high_res");
+	read_image(low_res_path, low_res);
+	read_image(high_res_path , high_res);
+}
+
+void CustomDataset::read_image(const std::string image_folder, std::vector<torch::Tensor> &data){
 	for (const auto& entry : std::filesystem::directory_iterator(image_folder)) {
 		// Check if the entry is a regular file
 		if (std::filesystem::is_regular_file(entry.status())) {

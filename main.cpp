@@ -3,7 +3,6 @@
 #include "dataset.h"
 
 #include <iostream>
-#include <filesystem>
 
 
 class Net : public torch::nn::Module {
@@ -32,7 +31,7 @@ class Net : public torch::nn::Module {
 
 int main() {
 //	std::string root_folder = "/kaggle/input/image-super-resolution";
-	std::filesystem::path root_folder = "dataset/train";
+	std::string root_folder = "dataset/train";
 	CustomDataset mydata(root_folder);
 
 	/*
