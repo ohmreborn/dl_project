@@ -1,6 +1,10 @@
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
+#include "dataset.h"
+
 #include <iostream>
+#include <filesystem>
+
 
 class Net : public torch::nn::Module {
 	private: 
@@ -27,41 +31,14 @@ class Net : public torch::nn::Module {
 };
 
 int main() {
-	std::string data_path = "/kaggle/input/image-super-resolution";
-	std::string filename = data_path + "/dataset/train/low_res/0.png";
-	std::cout << "Before cv::imread\n";
-	cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
-	std::cout << "After cv::imread\n";
-	if (img.empty()){
-		std::cerr << "Image not found!";
-		return 1;
-	}
-	std::cout << "Before cvtColor\n";
-	cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
-	std::cout << "After cvtColor\n";
+//	std::string root_folder = "/kaggle/input/image-super-resolution";
+	std::filesystem::path root_folder = "dataset/train";
+	CustomDataset mydata(root_folder);
 
-	std::cout << "Before from_blob\n";
-	std::cout << "img.isContinuous() = " << img.isContinuous() << '\n';
-	std::cout << "img.type() = " << img.type() << " (CV_8UC3 is 16)\n";
-	std::cout << "img.channels() = " << img.channels() << '\n';
-	std::cout << "img.elemSize() = " << img.elemSize() << '\n';
-	std::cout << "img.total() = " << img.total() << '\n';
-	std::cout << "img.step[0] = " << img.step[0] << " step[1] = " << img.step[1] << '\n';
-	std::cout << "img.data ptr = " << static_cast<const void*>(img.data) << '\n';
-	torch::Tensor img_tensor = torch::from_blob(
-			img.data,
-			{img.rows, img.cols, 3},
-			torch::kUInt8
-			).clone();
-	std::cout << "After from_blob\n";
-
-	std::cout << "Before permute\n";
-	img_tensor = img_tensor.permute({2, 0, 1}).toType(torch::kFloat).div_(255);
-	std::cout << "After permute\n";
-	std::cout << img_tensor << '\n';
-
-	Net model;
-	std::cout << model.forward(img_tensor);
+	/*
+	   Net model;
+	   std::cout << model.forward(img_tensor);
+	   */
 
 	return 0;
 }

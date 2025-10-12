@@ -13,7 +13,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-add_executable(main main.cpp)
+add_executable(main main.cpp dataset.cpp)
 target_link_libraries(main ${TORCH_LIBRARIES} ${OpenCV_LIBS})
 
 

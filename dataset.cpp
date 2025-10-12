@@ -1,29 +1,42 @@
 #include <torch/torch.h>
+#include <opencv2/opencv.hpp>
+#include "dataset.h"
 
-class CustomDataset : public torch::data::Dataset<CustomDataset, torch::data::Example<>> {
-private:
-	std::string root_folder;
+#include <vector>
 
-public:
-    CustomDataset(const std::string& annotations_file, const std::string& img_dir) {
-        // Load image paths and labels from annotations_file
-        // Populate image_paths and labels vectors
-        // Example: Read from a CSV or a manifest file
-    }
+CustomDataset::CustomDataset(const std::filesystem::path root_folder) {
+	read_image(root_folder / "low_res", low_res);
+	read_image(root_folder / "high_res", high_res);
+}
 
-    torch::data::Example<> get(size_t index) override {
-        // Load image from image_paths[index] using OpenCV or similar
-        // Convert image to torch::Tensor (e.g., using torch::from_blob)
-        // Apply any necessary transformations (resize, normalize)
-        torch::Tensor data = ...;
+void read_image(const std::filesystem::path image_folder, std::vector<torch::Tensor> &data){
+	for (const auto& entry : std::filesystem::directory_iterator(image_folder)) {
+		// Check if the entry is a regular file
+		if (std::filesystem::is_regular_file(entry.status())) {
+			std::string filename = entry.path().filename();
+			cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
+			if (img.empty()){
+				std::cerr << "Image not found!";
+				continue;
+			}
+			cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
 
-        // Get label from labels[index]
-        torch::Tensor target = torch::tensor(labels[index], torch::kInt64);
+			torch::Tensor img_tensor = torch::from_blob(
+					img.data,
+					{img.rows, img.cols, 3},
+					torch::kUInt8
+					).clone();
+			img_tensor = img_tensor.permute({2, 0, 1});
+			img_tensor = img_tensor.to(torch::kFloat32).div(255.0);
+			data.push_back(img_tensor);
+		}
+	}
+}
 
-        return {data, target};
-    }
+torch::data::Example<> CustomDataset::get(size_t index) {
+	return {low_res[index], high_res[index]};
+}
 
-    c10::optional<size_t> size() const override {
-        return image_paths.size();
-    }
-};
+torch::optional<size_t> CustomDataset::size() const {
+	return low_res.size();
+}
