@@ -3,6 +3,7 @@
 #include "dataset.h"
 
 #include <vector>
+#include <iostream>
 
 std::string join_path(const std::string& a, const std::string& b) {
 	if (a.back() == '/'){ 
@@ -24,6 +25,7 @@ void CustomDataset::read_image(const std::string image_folder, std::vector<torch
 		// Check if the entry is a regular file
 		if (std::filesystem::is_regular_file(entry.status())) {
 			std::string filename = entry.path().filename();
+			filename = join_path(image_folder, filename);
 			cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
 			if (img.empty()){
 				std::cerr << "Image not found!";
