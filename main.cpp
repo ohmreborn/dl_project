@@ -31,18 +31,34 @@ class Net : public torch::nn::Module {
 
 int main() {
 	std::string root_folder = "/kaggle/input/image-super-resolution/dataset/train";
-//	std::string root_folder = "dataset/train";
+	//	std::string root_folder = "dataset/train";
 	auto mydata = CustomDataset(root_folder).map(torch::data::transforms::Stack<>());
-	int batch_size = 16;
-	auto data_loader = torch::data::make_data_loader(std::move(mydata), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
-	for (auto& batch: *data_loader){
-		std::cout << batch[0].data << '\n';
-	}
+	size_t dataset_size = *mydata.size();
+	size_t batch_size = 16;
+	size_t num_iteration_per_epoch = (dataset_size + batch_size - 1) / batch_size;
 
-	/*
-	   Net model;
-	   std::cout << model.forward(img_tensor);
-	   */
+	auto data_loader = torch::data::make_data_loader(std::move(mydata), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
+
+	Net model;
+	torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1e-4));
+
+	int epochs = 100;
+	for (int epoch=0;epoch<epochs;epoch++){
+		float epoch_loss = 0;
+		for (auto& batch: *data_loader){
+			//low_re, high_re = low_re.to(device), high_re.to(device);
+			optimizer.zero_grad();
+			torch::Tensor pred = model.forward(batch.data);
+			torch::Tensor loss = torch::nn::functional::mse_loss(pred, batch.target);
+			loss.backward();
+			optimizer.step();
+
+			epoch_loss += loss.item<float>();
+
+		}
+		std::cout << "Epoch" <<  epoch+1 << " : Loss=" << epoch_loss/(float)num_iteration_per_epoch << '\n';
+
+	}
 
 	return 0;
 }
