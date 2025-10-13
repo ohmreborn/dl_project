@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <vector>
 
 class CustomDataset : public torch::data::Dataset<CustomDataset, torch::data::Example<>> {
 private:
