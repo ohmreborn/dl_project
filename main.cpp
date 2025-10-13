@@ -21,11 +21,8 @@ class NetImpl : public torch::nn::Module {
 	}
 
 		torch::Tensor forward(torch::Tensor input) {
-			std::cout << input.sizes() << '\n';
 			input = torch::relu(conv1(input));
-			std::cout << input.sizes() << '\n';
 			input = torch::relu(conv2(input));
-			std::cout << input.sizes() << '\n';
 			input = conv3(input);
 			return input;
 		}
@@ -33,8 +30,7 @@ class NetImpl : public torch::nn::Module {
 TORCH_MODULE(Net);
 
 int main() {
-	/*
-	std::string root_folder = "/kaggle/input/image-super-resolution/dataset/train";
+	std::string root_folder = "/root/.cache/kagglehub/datasets/adityachandrasekhar/image-super-resolution/versions/2/dataset/train";
 	//	std::string root_folder = "dataset/train";
 	auto mydata = CustomDataset(root_folder).map(torch::data::transforms::Stack<>());
 	size_t dataset_size = *mydata.size();
@@ -42,24 +38,24 @@ int main() {
 	size_t num_iteration_per_epoch = (dataset_size + batch_size - 1) / batch_size;
 
 	auto data_loader = torch::data::make_data_loader(std::move(mydata), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
-	*/
 
+	torch::Device device = torch::cuda::is_available() ? 
+		torch::kCUDA : torch::kCPU;
+	std::cout << device << '\n';
 	Net model;
-	torch::Tensor myrand = torch::randn({16, 3, 256, 256});
-	std::cout << "hello \n";
-	std::cout << torch::nn::functional::relu(myrand).sizes() << '\n';
-//	std::cout << model(myrand).sizes();
-	/*
-	torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1e-4));
+	model->to(device);
+	torch::optim::AdamW optimizer(model->parameters(), torch::optim::AdamWOptions(1e-4));
 
+	std::cout << "start train \n";
 	int epochs = 100;
 	for (int epoch=0;epoch<epochs;epoch++){
 		float epoch_loss = 0;
 		for (auto& batch: *data_loader){
-			//low_re, high_re = low_re.to(device), high_re.to(device);
+			torch::Tensor data = batch.data.to(device);
+			torch::Tensor target = batch.target.to(device);
 			optimizer.zero_grad();
-			torch::Tensor pred = model.forward(batch.data);
-			torch::Tensor loss = torch::nn::functional::mse_loss(pred, batch.target);
+			torch::Tensor pred = model(data);
+			torch::Tensor loss = torch::nn::functional::mse_loss(pred, target);
 			loss.backward();
 			optimizer.step();
 
@@ -69,7 +65,6 @@ int main() {
 		std::cout << "Epoch" <<  epoch+1 << " : Loss=" << epoch_loss/(float)num_iteration_per_epoch << '\n';
 
 	}
-	*/
 
 	return 0;
 }
