@@ -30,8 +30,8 @@ class Net : public torch::nn::Module {
 };
 
 int main() {
-//	std::string root_folder = "/kaggle/input/image-super-resolution";
-	std::string root_folder = "dataset/train";
+	std::string root_folder = "/kaggle/input/image-super-resolution/dataset/train";
+//	std::string root_folder = "dataset/train";
 	CustomDataset mydata(root_folder);
 	int batch_size = 16;
 	auto data_loader = torch::data::make_data_loader(std::move(mydata), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
