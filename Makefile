@@ -1,11 +1,11 @@
 all: build
-	cmake --build build
+	./build/main
 
-build: CMakeLists.txt
+pre_build: CMakeLists.txt 
 	./build.sh
 
-run:build
-	./build/main
+build: pre_build main.cpp
+	cmake --build build
 
 clean:build
 	rm -rf build
