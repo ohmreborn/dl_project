@@ -65,6 +65,7 @@ int main() {
 		std::cout << "Epoch" <<  epoch+1 << " : Loss=" << epoch_loss/(float)num_iteration_per_epoch << '\n';
 
 	}
+	torch::save(model, "model.pt");
 
 	return 0;
 }
