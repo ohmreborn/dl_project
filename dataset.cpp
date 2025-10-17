@@ -5,14 +5,6 @@
 #include <vector>
 #include <iostream>
 
-std::string join_path(const std::string& a, const std::string& b) {
-	if (a.back() == '/'){ 
-		return a + b;
-	}else{
-		return a + "/" + b;
-	}
-}
-
 CustomDataset::CustomDataset(const std::string root_folder) {
 	std::string low_res_path = join_path(root_folder, "low_res");
 	std::string high_res_path = join_path(root_folder, "high_res");

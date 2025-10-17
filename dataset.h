@@ -15,3 +15,7 @@ public:
 
     torch::optional<size_t> size() const override; 
 };
+
+inline std::string join_path(const std::string& a, const std::string& b) {
+	return a.back() == '/' ? a + b : a + "/" + b;
+}

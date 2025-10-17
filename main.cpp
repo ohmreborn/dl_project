@@ -1,7 +1,6 @@
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 #include "dataset.h"
-
 #include <iostream>
 
 class NetImpl : public torch::nn::Module {
@@ -30,14 +29,14 @@ class NetImpl : public torch::nn::Module {
 TORCH_MODULE(Net);
 
 int main() {
-	std::string root_folder = "/root/.cache/kagglehub/datasets/adityachandrasekhar/image-super-resolution/versions/2/dataset/train";
-	//	std::string root_folder = "dataset/train";
-	auto mydata = CustomDataset(root_folder).map(torch::data::transforms::Stack<>());
-	size_t dataset_size = *mydata.size();
+	std::string root_folder = "/root/.cache/kagglehub/datasets/adityachandrasekhar/image-super-resolution/versions/2/dataset";
+	//	std::string root_folder = "dataset";
+	std::string train_folder = join_path(root_folder,"train");
+	auto train_data = CustomDataset(train_folder).map(torch::data::transforms::Stack<>());
+	size_t train_size = *train_data.size();
 	size_t batch_size = 16;
-	size_t num_iteration_per_epoch = (dataset_size + batch_size - 1) / batch_size;
-
-	auto data_loader = torch::data::make_data_loader(std::move(mydata), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
+	size_t num_train_iteration_per_epoch = (train_size + batch_size - 1) / batch_size;
+	auto train_loader = torch::data::make_data_loader(std::move(train_data), torch::data::DataLoaderOptions().batch_size(batch_size).workers(1));
 
 	torch::Device device = torch::cuda::is_available() ? 
 		torch::kCUDA : torch::kCPU;
@@ -50,22 +49,20 @@ int main() {
 	int epochs = 100;
 	for (int epoch=0;epoch<epochs;epoch++){
 		float epoch_loss = 0;
-		for (auto& batch: *data_loader){
+		for (auto& batch: *train_loader){
 			torch::Tensor data = batch.data.to(device);
 			torch::Tensor target = batch.target.to(device);
-			optimizer.zero_grad();
 			torch::Tensor pred = model(data);
 			torch::Tensor loss = torch::nn::functional::mse_loss(pred, target);
 			loss.backward();
 			optimizer.step();
-
+			optimizer.zero_grad();
 			epoch_loss += loss.item<float>();
-
 		}
-		std::cout << "Epoch" <<  epoch+1 << " : Loss=" << epoch_loss/(float)num_iteration_per_epoch << '\n';
-
+		std::cout << "Epoch" <<  epoch+1 << " : Loss=" << epoch_loss/(float)num_train_iteration_per_epoch << '\n';
 	}
 	torch::save(model, "model.pt");
 
 	return 0;
 }
+
